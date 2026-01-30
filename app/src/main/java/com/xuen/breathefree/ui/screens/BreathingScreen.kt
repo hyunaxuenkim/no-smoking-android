@@ -57,9 +57,17 @@ fun BreathingScreen(
 ) {
     val context = LocalContext.current
     var progress by remember { mutableFloatStateOf(0f) }
-    var instruction by remember { mutableStateOf("Inhale slowly") }
     var amplitude by remember { mutableFloatStateOf(0f) }
     
+    // Configurable "Game" Constants
+    // 2 minutes (120s) to burn passively -> 1/120 per second
+    val passiveBurnRate = 1f / 120f 
+    // Tuned: LOWERED factor to prevent 'too fast' finish. 
+    // Was 0.035, now 0.015. Requires really intentional breathing.
+    val activeBurnFactor = 0.015f
+    // Noise gate: ignore quiet sounds (background noise)
+    val noiseThreshold = 0.1f
+
     var hasAudioPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(
@@ -93,37 +101,35 @@ fun BreathingScreen(
         }
     }
 
-    // Polling for amplitude
-    LaunchedEffect(Unit) {
-        while (true) {
-            val amp = analyzer.getAmplitude()
-            // Smooth out the amplitude updates a bit if needed, or just set it
-            amplitude = amp
-            delay(50) // Update every 50ms
-        }
-    }
+    // Main Game Loop: Updates amplitude and progress
+    LaunchedEffect(hasAudioPermission) {
+        if (!hasAudioPermission) return@LaunchedEffect
+        
+        val updateInterval = 50L // 50ms
+        val dt = updateInterval / 1000f // Delta time in seconds
 
-    // Simulating session progress
-    LaunchedEffect(Unit) {
-        val totalTime = 60000L // 60 seconds session
-        val steps = 600
-        val delayTime = totalTime / steps
-        for (i in 1..steps) {
-            progress = i / steps.toFloat()
-            // Simple logic: inhale for first half, exhale second half of every 10s cycle
-            val cycle = (i * delayTime) % 10000
-            if (cycle < 5000) instruction = "Inhale slowly"
-            else instruction = "Exhale"
+        while (progress < 1f) {
+            val rawAmp = analyzer.getAmplitude()
+            // Apply Noise Gate
+            val effectiveAmp = if (rawAmp > noiseThreshold) rawAmp else 0f
             
-            delay(delayTime)
+            amplitude = effectiveAmp // Use gated value for visual too
+            
+            // Calculate progress increment
+            val passiveBurn = passiveBurnRate * dt
+            val activeBurn = effectiveAmp * activeBurnFactor * dt
+            
+            progress = (progress + passiveBurn + activeBurn).coerceAtMost(1f)
+            
+            if (progress >= 1f) {
+                onSessionComplete()
+            }
+            
+            delay(updateInterval)
         }
-        onSessionComplete()
     }
 
     // Dynamic Scale based on Audio
-    // Base scale 1f + amplitude influence
-    // If amplitude is high (blowing into mic), scale increases.
-    // Let's make it significant: up to 2.5x
     val targetScale = 1f + (amplitude * 2.5f)
     val animatedScale by animateFloatAsState(
         targetValue = targetScale,
@@ -134,26 +140,20 @@ fun BreathingScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black),
+            .background(Color.Black)
+            .padding(16.dp), // Global padding
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxSize()
         ) {
-            Text(
-                text = instruction,
-                style = MaterialTheme.typography.displaySmall,
-                color = Color.White.copy(alpha = 0.8f)
-            )
-
-            Spacer(modifier = Modifier.height(48.dp))
-
             // Dynamic Flame Visual
             Box(
                 modifier = Modifier
-                    .size(200.dp) // Base size
-                    .scale(animatedScale) // Controlled by microphone
+                    .size(200.dp)
+                    .scale(animatedScale) 
                     .background(
                         brush = Brush.radialGradient(
                             colors = listOf(
@@ -166,27 +166,40 @@ fun BreathingScreen(
                     )
                     .alpha(0.8f)
             )
-
-            Spacer(modifier = Modifier.height(48.dp))
         }
 
-        // Progress Bar (Heat Streak) at bottom
-        LinearProgressIndicator(
-            progress = { progress },
+        // Progress Bar (Heat Streak)
+        // Moved up and made thicker for visibility
+        Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .height(4.dp),
-            color = BurntOrange,
-            trackColor = Color.DarkGray
-        )
+                .padding(bottom = 40.dp) // Lift up from gesture bar
+        ) {
+            Text(
+                text = "Burning...",
+                color = Color.Gray,
+                style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier.align(Alignment.CenterHorizontally).padding(bottom = 8.dp)
+            )
+            
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp) // Thicker
+                    .background(Color.DarkGray, CircleShape),
+                color = BurntOrange,
+                trackColor = Color.DarkGray,
+            )
+        }
 
         // Close Button
         IconButton(
             onClick = onSessionComplete,
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .padding(16.dp)
+                .padding(top = 24.dp) // Safe area
         ) {
             Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.Gray)
         }
