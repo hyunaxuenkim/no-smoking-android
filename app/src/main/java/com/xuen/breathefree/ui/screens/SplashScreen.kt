@@ -22,15 +22,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
 import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(onNavigateToDashboard: () -> Unit) {
+    val context = LocalContext.current
+    
     LaunchedEffect(key1 = true) {
-        delay(2000)
+        delay(2000) // Keep the vibe check
         onNavigateToDashboard()
     }
 
@@ -84,3 +88,4 @@ fun SplashScreen(onNavigateToDashboard: () -> Unit) {
         }
     }
 }
+
