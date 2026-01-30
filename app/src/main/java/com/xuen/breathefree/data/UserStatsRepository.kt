@@ -22,6 +22,9 @@ class UserStatsRepository(context: Context) {
     private val _weeklyStats = MutableStateFlow<List<Int>>(emptyList())
     val weeklyStats: StateFlow<List<Int>> = _weeklyStats.asStateFlow()
 
+    private val _selectedTheme = MutableStateFlow("Inferno")
+    val selectedTheme: StateFlow<String> = _selectedTheme.asStateFlow()
+
     init {
         loadStats()
     }
@@ -42,6 +45,7 @@ class UserStatsRepository(context: Context) {
         }
 
         refreshWeeklyStats()
+        _selectedTheme.value = prefs.getString("selected_theme", "Inferno") ?: "Inferno"
     }
 
     fun incrementSession() {
@@ -69,5 +73,10 @@ class UserStatsRepository(context: Context) {
             stats.add(prefs.getInt("daily_$dateStr", 0))
         }
         _weeklyStats.value = stats
+    }
+    
+    fun setTheme(themeName: String) {
+        _selectedTheme.value = themeName
+        prefs.edit().putString("selected_theme", themeName).apply()
     }
 }

@@ -38,6 +38,7 @@ fun IgniteApp() {
     val context = androidx.compose.ui.platform.LocalContext.current
     val repository = remember { com.xuen.breathefree.data.UserStatsRepository(context) }
     val dashboardViewModel = remember { com.xuen.breathefree.ui.viewmodel.DashboardViewModel(repository) }
+    val settingsViewModel = remember { com.xuen.breathefree.ui.viewmodel.SettingsViewModel(repository) }
     
     val navController = rememberNavController()
     
@@ -64,6 +65,7 @@ fun IgniteApp() {
         }
         composable(Screen.Breathing.route) {
             BreathingScreen(
+                repository = repository, // Pass repository for theme access
                 onSessionComplete = {
                     // Update stats when session completes
                     dashboardViewModel.onSessionCompleted()
@@ -73,6 +75,7 @@ fun IgniteApp() {
         }
         composable(Screen.Settings.route) {
             SettingsScreen(
+                viewModel = settingsViewModel,
                 onNavigateBack = {
                     navController.popBackStack()
                 }

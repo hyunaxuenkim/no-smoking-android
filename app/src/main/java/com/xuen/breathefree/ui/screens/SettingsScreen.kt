@@ -51,14 +51,27 @@ import com.xuen.breathefree.ui.theme.ElectricBlue
 import com.xuen.breathefree.ui.theme.ThemeGradient
 import com.xuen.breathefree.ui.theme.MutedSkyBlue
 
+import androidx.compose.runtime.collectAsState
+import com.xuen.breathefree.ui.viewmodel.SettingsViewModel
+
 @Composable
 fun SettingsScreen(
+    viewModel: SettingsViewModel,
     onNavigateBack: () -> Unit
 ) {
     var hapticPulse by remember { mutableStateOf(true) }
     var ambientCrackle by remember { mutableStateOf(false) }
     var sensitivity by remember { mutableFloatStateOf(0.85f) }
-    var selectedFlame by remember { mutableStateOf("Ember Orange") }
+    
+    val selectedTheme by viewModel.selectedTheme.collectAsState()
+    // Local state to simulate selection until saved? Or direct update?
+    // Let's do direct update for instant feedback, or local selection + apply.
+    // Given the UI has "Apply Theme" button, we should probably use local state and commit on Apply.
+    // BUT the prompt implies instant visual feedback ("Reference is this").
+    // Let's stick to the current UI which has "Apply Theme".
+    // Wait, the "Apply Theme" button is there. So we should use local state initialized from VM, then save on Apply.
+    
+    var localSelectedTheme by remember(selectedTheme) { mutableStateOf(selectedTheme) }
 
     Column(
         modifier = Modifier
@@ -111,12 +124,12 @@ fun SettingsScreen(
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                val flames = listOf("Ember Orange", "Electric Cyan", "Midnight Blue")
+                val flames = listOf("Inferno", "Aurora", "Abyss")
                 items(flames) { flame ->
                     FlameCard(
                         name = flame,
-                        isSelected = flame == selectedFlame,
-                        onClick = { selectedFlame = flame }
+                        isSelected = flame == localSelectedTheme,
+                        onClick = { localSelectedTheme = flame }
                     )
                 }
             }
@@ -214,7 +227,10 @@ fun SettingsScreen(
         // Apply Button
 
         Button(
-            onClick = onNavigateBack,
+            onClick = {
+                viewModel.updateTheme(localSelectedTheme)
+                onNavigateBack()
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
@@ -257,7 +273,9 @@ fun FlameCard(
                 .height(120.dp)
                 .clip(RoundedCornerShape(8.dp))
                 .background(
-                    if (name.contains("Orange")) BurntOrange else if (name.contains("Cyan")) DeepCyan else Color.Blue
+                    if (name == "Inferno") com.xuen.breathefree.ui.theme.CoreOrange 
+                    else if (name == "Aurora") com.xuen.breathefree.ui.theme.NeonLime 
+                    else Color.Blue // Abyss
                 )
                 .align(Alignment.TopCenter)
         )
@@ -270,11 +288,7 @@ fun FlameCard(
                 style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp),
                 color = Color.White
             )
-             Text(
-                text = "Classic Wildfire", // subtext placeholder
-                style = MaterialTheme.typography.labelSmall,
-                color = Color.Gray
-            )
+            // Subtitle removed as requested
         }
         
         if (isSelected) {
