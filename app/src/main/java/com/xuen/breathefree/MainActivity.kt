@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -34,6 +35,10 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun IgniteApp() {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val repository = remember { com.xuen.breathefree.data.UserStatsRepository(context) }
+    val dashboardViewModel = remember { com.xuen.breathefree.ui.viewmodel.DashboardViewModel(repository) }
+    
     val navController = rememberNavController()
     
     NavHost(navController = navController, startDestination = Screen.Splash.route) {
@@ -48,6 +53,7 @@ fun IgniteApp() {
         }
         composable(Screen.Dashboard.route) {
             DashboardScreen(
+                viewModel = dashboardViewModel,
                 onNavigateToBreathing = {
                     navController.navigate(Screen.Breathing.route)
                 },
@@ -59,6 +65,8 @@ fun IgniteApp() {
         composable(Screen.Breathing.route) {
             BreathingScreen(
                 onSessionComplete = {
+                    // Update stats when session completes
+                    dashboardViewModel.onSessionCompleted()
                     navController.popBackStack()
                 }
             )

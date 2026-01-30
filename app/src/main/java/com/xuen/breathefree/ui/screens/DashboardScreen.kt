@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -24,149 +25,208 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.xuen.breathefree.ui.theme.BurntOrange
+import com.xuen.breathefree.ui.theme.DeepCyan
 import com.xuen.breathefree.ui.theme.ThemeGradient
+import com.xuen.breathefree.ui.viewmodel.DashboardViewModel
+
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.windowInsetsPadding
 
 @Composable
 fun DashboardScreen(
+    viewModel: DashboardViewModel,
     onNavigateToBreathing: () -> Unit,
     onNavigateToSettings: () -> Unit
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .systemBarsPadding() // Handled safe area for Status Bar and Navigation Bar
             .padding(24.dp)
     ) {
-        // Header
-        Text(
-            text = "IGNITE CONTROL",
-            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-            color = Color.White
-        )
-        Text(
-            text = "REFINED BREATH MASTERY",
-            style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 2.sp),
-            color = Color.Gray
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // Stats Cards
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            StatsCard(
-                title = "12",
-                subtitle = "DAYS CLEAN",
-                icon = Icons.Default.DateRange, // Placeholder icon
-                modifier = Modifier.weight(1f)
+        // Header (Fixed)
+        Column {
+            Text(
+                text = "IGNITE CONTROL",
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                color = Color.White
             )
-            StatsCard(
-                title = "48",
-                subtitle = "SESSIONS",
-                icon = Icons.Default.Info, // Placeholder icon
-                modifier = Modifier.weight(1f)
+            Text(
+                text = "REFINED BREATH MASTERY",
+                style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 2.sp),
+                color = Color.Gray
             )
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
-        // Central Graphic Placeholder
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(Color(0xFF1E1E1E)),
-            contentAlignment = Alignment.Center
+        // Content Area (Flexible)
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            Text("Bonfire Visualization", color = Color.Gray)
-        }
-
-        Spacer(modifier = Modifier.height(32.dp))
-        
-        // Weekly Chart Placeholder
-         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color(0xFF1E1E1E), RoundedCornerShape(24.dp))
-                .padding(20.dp)
-        ) {
+            // Stats Cards
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text("RESPIRATION FLOW", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                Box(
+                StatsCard(
+                    title = "${uiState.daysClean}",
+                    subtitle = "DAYS CLEAN",
+                    icon = Icons.Default.DateRange,
+                    modifier = Modifier.weight(1f)
+                )
+                StatsCard(
+                    title = "${uiState.totalSessions}",
+                    subtitle = "SESSIONS",
+                    icon = Icons.Default.Info,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            // Central Graphic Placeholder
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1.2f) // Give more space to the visualization
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color(0xFF1E1E1E)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("Bonfire Visualization", color = Color.Gray)
+            }
+            
+            // Weekly Chart 
+            WeeklyChart(weeklyStats = uiState.weeklyStats)
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Bottom Actions (Fixed)
+        Column(
+           verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Action Button
+            Button(
+                onClick = onNavigateToBreathing,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                shape = RoundedCornerShape(28.dp),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues()
+            ) {
+                 Box(
                     modifier = Modifier
-                        .background(Color(0xFF2D2D2D), RoundedCornerShape(8.dp))
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                        .fillMaxSize()
+                        .background(ThemeGradient, RoundedCornerShape(28.dp)),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text("WEEKLY", color = Color.Gray, fontSize = 10.sp)
+                    Text(
+                        text = "START SESSION",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = Color.White
+                    )
                 }
             }
             
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Bar Chart Simulation
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Bottom
+            // Settings Button (Matching Style)
+            Button(
+                onClick = onNavigateToSettings,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                shape = RoundedCornerShape(28.dp),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues()
             ) {
-                val heights = listOf(40.dp, 60.dp, 30.dp, 80.dp, 50.dp, 45.dp, 55.dp)
-                heights.forEachIndexed { index, height ->
-                    Box(
-                        modifier = Modifier
-                            .width(12.dp)
-                            .height(height)
-                            .clip(RoundedCornerShape(50))
-                            .background(
-                                if (index == 3) BurntOrange else Color(0xFF333333)
-                            )
+                 Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .border(1.dp, Color(0xFF333333), RoundedCornerShape(28.dp))
+                        .background(Color(0xFF121212), RoundedCornerShape(28.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "SETTINGS",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = Color.White
                     )
                 }
             }
         }
+    }
+}
 
-        Spacer(modifier = Modifier.weight(1f))
-
-        // Action Button
-        Button(
-            onClick = onNavigateToBreathing,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-            shape = RoundedCornerShape(28.dp),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues() // Remove padding to allow gradient
+@Composable
+fun WeeklyChart(weeklyStats: List<Int>) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0xFF1E1E1E), RoundedCornerShape(24.dp))
+            .padding(20.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-             Box(
+            Text("RESPIRATION FLOW", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .background(ThemeGradient, RoundedCornerShape(28.dp)),
-                contentAlignment = Alignment.Center
+                    .background(Color(0xFF2D2D2D), RoundedCornerShape(8.dp))
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
             ) {
-                Text(
-                    text = "START SESSION",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = Color.White
-                )
+                Text("WEEKLY", color = Color.Gray, fontSize = 10.sp)
             }
         }
-        // Temporary access to settings
-        Button(onClick = onNavigateToSettings) {
-            Text("Settings")
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Bar Chart using Real Data
+        // Max value for scaling
+        val maxSessions = (weeklyStats.maxOrNull() ?: 1).coerceAtLeast(10) // Minimum 10 scale
+        
+        Row(
+            modifier = Modifier.fillMaxWidth().height(100.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Bottom
+        ) {
+            weeklyStats.forEachIndexed { index, count ->
+                val barHeightRatio = count / maxSessions.toFloat()
+                // Min height 4dp so it's visible even if 0
+                val heightPercent = barHeightRatio.coerceAtLeast(0.05f) 
+                
+                // Highlight today (last item)
+                val isToday = index == weeklyStats.lastIndex
+                
+                Box(
+                    modifier = Modifier
+                        .width(12.dp)
+                        .fillMaxHeight(heightPercent)
+                        .clip(RoundedCornerShape(50))
+                        .background(
+                            if (isToday) BurntOrange else Color(0xFF333333)
+                        )
+                )
+            }
         }
     }
 }
@@ -175,7 +235,7 @@ fun DashboardScreen(
 fun StatsCard(
     title: String,
     subtitle: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     modifier: Modifier = Modifier
 ) {
     Box(
