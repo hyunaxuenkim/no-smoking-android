@@ -12,9 +12,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -46,7 +47,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.xuen.breathefree.ui.theme.BurntOrange
 import com.xuen.breathefree.ui.theme.DeepCyan
+import com.xuen.breathefree.ui.theme.ElectricBlue
 import com.xuen.breathefree.ui.theme.ThemeGradient
+import com.xuen.breathefree.ui.theme.MutedSkyBlue
 
 @Composable
 fun SettingsScreen(
@@ -61,6 +64,7 @@ fun SettingsScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .systemBarsPadding() 
             .padding(24.dp)
     ) {
         // Header
@@ -72,7 +76,7 @@ fun SettingsScreen(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back",
-                    tint = Color.White
+                    tint = ElectricBlue
                 )
             }
             Spacer(modifier = Modifier.width(8.dp))
@@ -85,145 +89,143 @@ fun SettingsScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Flame Aura Selection
-        Text(
-            text = "Flame Aura",
-            style = MaterialTheme.typography.titleMedium,
-            color = Color.White
-        )
-        Text(
-            text = "SELECT PALETTE",
-            style = MaterialTheme.typography.labelSmall,
-            color = Color.Gray,
-            modifier = Modifier.align(Alignment.End)
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            val flames = listOf("Ember Orange", "Electric Cyan", "Midnight Blue")
-            items(flames) { flame ->
-                FlameCard(
-                    name = flame,
-                    isSelected = flame == selectedFlame,
-                    onClick = { selectedFlame = flame }
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // Experience Controls
-        Text(
-            text = "Experience",
-            style = MaterialTheme.typography.titleMedium,
-            color = Color.White
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-
+        // Content Area (Flexible)
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color(0xFF121212), RoundedCornerShape(24.dp))
-                .border(1.dp, Color(0xFF333333), RoundedCornerShape(24.dp))
-                .padding(16.dp)
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            // Haptic Pulse
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+             // Flame Aura Selection
+            Text(
+                text = "Flame Aura",
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.White
+            )
+            Text(
+                text = "SELECT PALETTE",
+                style = MaterialTheme.typography.labelSmall,
+                color = Color.Gray,
+                modifier = Modifier.align(Alignment.End)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Column {
-                    Text("Haptic Pulse", color = Color.White, fontWeight = FontWeight.Bold)
-                    Text("Vibrate during inhale peaks", color = Color.Gray, style = MaterialTheme.typography.labelSmall)
-                }
-                Switch(
-                    checked = hapticPulse,
-                    onCheckedChange = { hapticPulse = it },
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = Color.White,
-                        checkedTrackColor = DeepCyan,
-                        uncheckedThumbColor = Color.Gray,
-                        uncheckedTrackColor = Color.DarkGray
+                val flames = listOf("Ember Orange", "Electric Cyan", "Midnight Blue")
+                items(flames) { flame ->
+                    FlameCard(
+                        name = flame,
+                        isSelected = flame == selectedFlame,
+                        onClick = { selectedFlame = flame }
                     )
-                )
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Breath Sensitivity
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                 Column {
-                    Text("Breath Sensitivity", color = Color.White, fontWeight = FontWeight.Bold)
-                    Text("Adjust microphone response", color = Color.Gray, style = MaterialTheme.typography.labelSmall)
-                }
-                Text("${(sensitivity * 100).toInt()}%", color = BurntOrange, fontWeight = FontWeight.Bold)
-            }
-            Slider(
-                value = sensitivity,
-                onValueChange = { sensitivity = it },
-                colors = SliderDefaults.colors(
-                    thumbColor = BurntOrange,
-                    activeTrackColor = BurntOrange,
-                    inactiveTrackColor = Color.DarkGray
-                )
+            // Experience Controls
+            Text(
+                text = "Experience",
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.White
             )
 
-             Spacer(modifier = Modifier.height(24.dp))
-
-            // Ambient Crackle
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFF121212), RoundedCornerShape(24.dp))
+                    .border(1.dp, Color(0xFF333333), RoundedCornerShape(24.dp))
+                    .padding(16.dp)
             ) {
-                Column {
-                    Text("Ambient Crackle", color = Color.White, fontWeight = FontWeight.Bold)
-                    Text("Fireplace ASMR sounds", color = Color.Gray, style = MaterialTheme.typography.labelSmall)
+                // Haptic Pulse
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text("Haptic Pulse", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text("Vibrate during inhale peaks", color = Color.Gray, style = MaterialTheme.typography.labelSmall)
+                    }
+                    Switch(
+                        checked = hapticPulse,
+                        onCheckedChange = { hapticPulse = it },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.White,
+                            checkedTrackColor = ElectricBlue,
+                            uncheckedThumbColor = Color.Gray,
+                            uncheckedTrackColor = Color.DarkGray
+                        )
+                    )
                 }
-                Switch(
-                    checked = ambientCrackle,
-                    onCheckedChange = { ambientCrackle = it },
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = Color.White,
-                        checkedTrackColor = DeepCyan,
-                        uncheckedThumbColor = Color.Gray,
-                        uncheckedTrackColor = Color.DarkGray
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Breath Sensitivity
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                     Column {
+                        Text("Breath Sensitivity", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text("Adjust microphone response", color = Color.Gray, style = MaterialTheme.typography.labelSmall)
+                    }
+                    Text("${(sensitivity * 100).toInt()}%", color = ElectricBlue, fontWeight = FontWeight.Bold)
+                }
+                Slider(
+                    value = sensitivity,
+                    onValueChange = { sensitivity = it },
+                    colors = SliderDefaults.colors(
+                        thumbColor = ElectricBlue,
+                        activeTrackColor = ElectricBlue,
+                        inactiveTrackColor = Color.DarkGray
                     )
                 )
+
+                 Spacer(modifier = Modifier.height(24.dp))
+
+                // Ambient Crackle
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text("Ambient Crackle", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text("Fireplace ASMR sounds", color = Color.Gray, style = MaterialTheme.typography.labelSmall)
+                    }
+                    Switch(
+                        checked = ambientCrackle,
+                        onCheckedChange = { ambientCrackle = it },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.White,
+                            checkedTrackColor = ElectricBlue,
+                            uncheckedThumbColor = Color.Gray,
+                            uncheckedTrackColor = Color.DarkGray
+                        )
+                    )
+                }
             }
         }
-
-        Spacer(modifier = Modifier.weight(1f))
+       
+        Spacer(modifier = Modifier.height(24.dp))
 
         // Apply Button
+
         Button(
             onClick = onNavigateBack,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-            shape = RoundedCornerShape(28.dp),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues()
+            colors = ButtonDefaults.buttonColors(containerColor = MutedSkyBlue), // Solid Color
+            shape = RoundedCornerShape(28.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(ThemeGradient, RoundedCornerShape(28.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Apply Theme",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = Color.White
-                )
-            }
+            Text(
+                text = "Apply Theme",
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = Color.White
+            )
         }
     }
 }
@@ -242,7 +244,7 @@ fun FlameCard(
             .background(if (isSelected) Color(0xFF1E1E1E) else Color(0xFF121212))
             .border(
                 width = if (isSelected) 2.dp else 1.dp,
-                color = if (isSelected) BurntOrange else Color(0xFF333333),
+                color = if (isSelected) ElectricBlue else Color(0xFF333333),
                 shape = RoundedCornerShape(16.dp)
             )
             .clickable(onClick = onClick)
@@ -282,7 +284,7 @@ fun FlameCard(
                 tint = Color.White,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .background(Color.Gray.copy(alpha=0.5f), CircleShape)
+                    .background(ElectricBlue.copy(alpha=0.5f), CircleShape)
                     .padding(4.dp)
                     .size(16.dp)
             )

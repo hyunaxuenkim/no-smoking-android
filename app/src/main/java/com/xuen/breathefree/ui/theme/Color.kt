@@ -5,14 +5,17 @@ import androidx.compose.ui.graphics.Color
 
 val BurntOrange = Color(0xFFFF4500)
 val DeepCyan = Color(0xFF008B8B)
+val ElectricBlue = Color(0xFF00BFFF)
+val MutedSkyBlue = Color(0xFF5B9BD5) // Toned down sky blue
 val PitchBlack = Color(0xFF000000)
 val DarkGray = Color(0xFF121212)
 val LightGray = Color(0xFFCCCCCC)
 
-val ThemeGradient = Brush.verticalGradient(colors = listOf(DeepCyan, BurntOrange))
+// User requested NO GRADIENT, simple solid color.
+val ThemeGradient = Brush.verticalGradient(colors = listOf(MutedSkyBlue, MutedSkyBlue)) 
 
-// Material Colors mapped
-val Primary = BurntOrange
+// Update Primary to the new requested color
+val Primary = MutedSkyBlue
 val Secondary = DeepCyan
 val Tertiary = Color(0xFFFFA500) // Lighter orange
 val Background = PitchBlack

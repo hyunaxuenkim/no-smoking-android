@@ -35,7 +35,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.xuen.breathefree.ui.theme.BurntOrange
+import com.xuen.breathefree.ui.theme.ElectricBlue
 import com.xuen.breathefree.ui.theme.DeepCyan
 import com.xuen.breathefree.ui.theme.ThemeGradient
 import com.xuen.breathefree.ui.viewmodel.DashboardViewModel
@@ -45,6 +45,7 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.windowInsetsPadding
+import com.xuen.breathefree.ui.theme.MutedSkyBlue
 
 @Composable
 fun DashboardScreen(
@@ -124,52 +125,36 @@ fun DashboardScreen(
            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Action Button
+
             Button(
                 onClick = onNavigateToBreathing,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                shape = RoundedCornerShape(28.dp),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues()
+                colors = ButtonDefaults.buttonColors(containerColor = MutedSkyBlue), // Solid color
+                shape = RoundedCornerShape(28.dp)
             ) {
-                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(ThemeGradient, RoundedCornerShape(28.dp)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "START SESSION",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = Color.White
-                    )
-                }
+                Text(
+                    text = "START SESSION",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = Color.White
+                )
             }
             
-            // Settings Button (Matching Style)
+            // Settings Button (Matching Style, Solid Color)
             Button(
                 onClick = onNavigateToSettings,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                shape = RoundedCornerShape(28.dp),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues()
+                colors = ButtonDefaults.buttonColors(containerColor = MutedSkyBlue), // Matching Start Session
+                shape = RoundedCornerShape(28.dp)
             ) {
-                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .border(1.dp, Color(0xFF333333), RoundedCornerShape(28.dp))
-                        .background(Color(0xFF121212), RoundedCornerShape(28.dp)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "SETTINGS",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = Color.White
-                    )
-                }
+                Text(
+                    text = "SETTINGS",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = Color.White
+                )
             }
         }
     }
@@ -223,7 +208,7 @@ fun WeeklyChart(weeklyStats: List<Int>) {
                         .fillMaxHeight(heightPercent)
                         .clip(RoundedCornerShape(50))
                         .background(
-                            if (isToday) BurntOrange else Color(0xFF333333)
+                            if (isToday) ElectricBlue else Color(0xFF333333)
                         )
                 )
             }
@@ -248,7 +233,7 @@ fun StatsCard(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = BurntOrange,
+            tint = ElectricBlue,
             modifier = Modifier.align(Alignment.TopEnd)
         )
         Column(modifier = Modifier.align(Alignment.BottomStart)) {
