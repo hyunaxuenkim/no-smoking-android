@@ -7,9 +7,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -43,6 +43,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.xuen.breathefree.data.AudioAnalyzer
@@ -59,11 +60,10 @@ fun BreathingScreen(
     var amplitude by remember { mutableFloatStateOf(0f) }
     
     // Configurable "Game" Constants
-    // 2 minutes to burn passively
     val passiveBurnRate = 1f / 120f 
-    // Tuned factor for active breathing
     val activeBurnFactor = 0.015f
-    val noiseThreshold = 0.1f
+    // Tuned: Lower threshold to catch "off-axis" blowing
+    val noiseThreshold = 0.05f 
 
     var hasAudioPermission by remember {
         mutableStateOf(
@@ -102,7 +102,7 @@ fun BreathingScreen(
     LaunchedEffect(hasAudioPermission) {
         if (!hasAudioPermission) return@LaunchedEffect
         
-        val updateInterval = 50L // 50ms
+        val updateInterval = 50L
         val dt = updateInterval / 1000f
 
         while (progress < 1f) {
@@ -124,13 +124,22 @@ fun BreathingScreen(
     }
 
     // --- Visual Animation States ---
-    // Smooth out the amplitude for the smoke width to make it less jittery
+    
+    // Sensitivity Boost
+    val visualInput = (amplitude * 2.5f).coerceAtMost(1f)
+
+    // Smooth spreading animation
     val animatedSpread by animateFloatAsState(
-        targetValue = amplitude,
-        animationSpec = tween(150, easing = FastOutSlowInEasing),
+        targetValue = visualInput,
+        animationSpec = tween(300, easing = FastOutSlowInEasing),
         label = "smoke_spread"
     )
 
+    // Beam Dimensions
+    val maxBeamHeight = 400.dp
+    // Burnt Height: Grows from 0 to max as progress increases
+    val burntHeight = (maxBeamHeight * progress).coerceAtMost(maxBeamHeight)
+    
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -138,86 +147,67 @@ fun BreathingScreen(
             .padding(16.dp),
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxSize()
+        // --- SMOKE GLOW (Background Aura) ---
+        // Wide Radial Gradient: "Not round" but "Spread out"
+        // Increased Alpha as requested (More visible)
+        Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(maxBeamHeight)
+                .alpha(1f) // Fully opaque canvas, control alpha in brush
+                .scale(scaleX = 1.5f + (animatedSpread * 4.0f), scaleY = 1.2f)
         ) {
-            // --- The "Cigarette/Beam" Visual ---
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(
+                        // Brighter/More Visible Cores
+                        Color(0xFF00E5FF).copy(alpha = 0.5f + (animatedSpread * 0.3f)), // Core
+                        Color(0xFF004D40).copy(alpha = 0.2f + (animatedSpread * 0.2f)), // Outer
+                        Color.Transparent // Edge
+                    )
+                )
+            )
+        }
+
+        // --- BEAM CONTAINER ---
+        Box(
+            modifier = Modifier
+                .height(maxBeamHeight)
+                .width(24.dp),
+            contentAlignment = Alignment.TopCenter
+        ) {
+            // 1. Base Active Beam (Full Size, Blue/White Gradient)
             Box(
-                contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .weight(1f) // Fill upper space
-                    .fillMaxWidth()
-            ) {
-                // 1. SMOKE/MIST LAYER (Behind)
-                // Spreads horizontally based on breath
-                Box(
-                    modifier = Modifier
-                        .height(300.dp) // Same height as beam
-                        // Width = Base + (Screen Width * Spread)
-                        // We use a fraction of max width for the spread
-                        .fillMaxWidth(0.1f + (animatedSpread * 0.9f)) 
-                        .alpha(0.6f + (animatedSpread * 0.4f)) // Gets more opaque when blowing
-                        .background(
-                            brush = Brush.horizontalGradient(
-                                colors = listOf(
-                                    Color.Transparent, // Fade far left
-                                    Color(0xFF00BFFF).copy(alpha = 0.5f), // Soft Blue Mist
-                                    Color.White.copy(alpha = 0.8f), // Dense center
-                                    Color(0xFF00BFFF).copy(alpha = 0.5f), // Soft Blue Mist
-                                    Color.Transparent // Fade far right
-                                )
-                            ),
-                            shape = RoundedCornerShape(100) // Soft edges
-                        )
-                )
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color(0xFF00BFFF), // Bright Blue
+                                Color.White,
+                                Color(0xFF00BFFF)
+                            )
+                        ),
+                        shape = RectangleShape
+                    )
+            )
 
-                // 2. GLOWING BEAM LAYER (The "Icon")
-                // Always visible, anchors the visual
-                Box(
-                    modifier = Modifier
-                        .width(12.dp)
-                        .height(300.dp)
-                        .scale(1f + (animatedSpread * 0.05f)) // Slight pulse
-                        .background(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(
-                                    Color(0xFF00BFFF), // Bright Blue
-                                    Color.White,
-                                    Color(0xFF00BFFF)
-                                )
-                            ),
-                            shape = RoundedCornerShape(50)
-                        )
-                )
-            }
-
-            // --- Bottom Controls ---
-            Column(
+            // 2. Burnt Overlay (Grows from Top)
+            // Turns the top part Dark Gray/Ash
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 40.dp)
-            ) {
-                Text(
-                    text = "IGNITING...",
-                    color = Color.Gray,
-                    style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.align(Alignment.CenterHorizontally).padding(bottom = 8.dp)
-                )
-                
-                LinearProgressIndicator(
-                    progress = { progress },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(8.dp)
-                        .background(Color.DarkGray, CircleShape),
-                    color = BurntOrange, // Keep the orange accent for "Heat"
-                    trackColor = Color.DarkGray,
-                )
-            }
+                    .height(burntHeight)
+                    .background(
+                        color = Color(0xFF555555), // Lighter Ash Gray for visibility
+                        shape = RectangleShape 
+                    )
+            )
         }
         
+        // Clip the entire beam container to ensure the overlay stays inside the capsule shape
+        // We can do this by applying clip to the Container Box instead.
+
         // Floating Close Button
         Box(modifier = Modifier.fillMaxSize()) {
             IconButton(
